@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laporan Bulanan</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/report.css') }}">
+</head>
+<body>
+    <div class="report-container">
+        <h2>Laporan Pembayaran</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Nama BDM</th>
+                    <th>Bulan</th>
+                    <th>Nominal Cicilan</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for report in reports %}
+                <tr>
+                    <td>{{ report.name }}</td>
+                    <td>{{ report.month }}</td>
+                    <td>{{ report.nominal }}</td>
+                    <td>
+                        <!-- Form untuk menandai sebagai sudah dibayar -->
+                        <form action="/mark_paid" method="POST" onsubmit="return confirm('Apakah anda yakin ingin menandai sebagai sudah dibayar?')">
+                            <input type="hidden" name="bdm_name" value="{{ report.name }}">
+                            <input type="hidden" name="nominal" value="{{ report.nominal }}">
+                            <button type="submit">Sudah Dibayar</button>
+                        </form>
+                        <!-- Form untuk menghapus pembayaran -->
+                        <form action="/delete_payment" method="POST" onsubmit="return confirm('Apakah anda yakin ingin menghapus pembayaran ini?')">
+                            <input type="hidden" name="bdm_name" value="{{ report.name }}">
+                            <input type="hidden" name="bulan" value="{{ report.month }}">
+                            <button type="submit">Hapus Pembayaran</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h3>Perhitungan Otomatis</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Nama BDM</th>
+                    <th>Total Tagihan Tersisa</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for summary in summaries %}
+                <tr>
+                    <td>{{ summary.bdm_name }}</td>
+                    <td>{{ summary.remaining }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Input Data</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="form-container">
+        <h2>Input Data Cicilan</h2>
+        <form action="/submit" method="POST">
+            <label for="bdm_name">Nama BDM</label>
+            <input type="text" name="bdm_name" id="bdm_name" required>
+        
+            <label for="nominal">Nominal</label>
+            <input type="number" name="nominal" id="nominal" required>
+        
+            <label for="duration">Jangka Waktu (bulan)</label>
+            <input type="number" name="duration" id="duration" required>
+
+            <label for="vendor_name">Nama Vendor</label>
+            <input type="text" name="vendor_name" id="vendor_name">
+
+            <label for="pic">PIC</label>
+            <input type="text" name="pic" id="pic">
+
+            <label for="phone">No HP</label>
+            <input type="text" name="phone" id="phone">
+
+            <button type="submit">Submit</button>
+        </form>
+        <a href="/report" class="report-button">Lihat Laporan</a>
+    </div>
+</body>
+</html>
