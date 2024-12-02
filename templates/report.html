@@ -6,61 +6,86 @@
     <title>Laporan Bulanan</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/report.css') }}">
 </head>
-<body>
-    <div class="report-container">
-        <h2>Laporan Pembayaran</h2>
 
+<body>
+    
+    {% extends "base.html" %}
+    {% block content %}
+
+    <!-- Tabel untuk Data Cicilan yang Belum Dibayar -->
+    <h3>Data Cicilan yang Belum Dibayar</h3>
+    <div class="table-container">
         <table>
             <thead>
                 <tr>
+                    <th>No Kontrak</th>
+                    <th>Tanggal</th>
                     <th>Nama BDM</th>
                     <th>Bulan</th>
                     <th>Nominal Cicilan</th>
+                    <th>Vendor</th>
+                    <th>No HP</th>
+                    <th>Status Pembayaran</th>
                     <th>Aksi</th>
                 </tr>
             </thead>
             <tbody>
-                {% for report in reports %}
+                {% for report in unpaid_reports %}
                 <tr>
+                    <td>{{ report.contract_no }}</td>
+                    <td>{{ report.date }}</td>
                     <td>{{ report.name }}</td>
-                    <td>{{ report.month }}</td>
-                    <td>{{ report.nominal }}</td>
+                    <td>Bulan ke {{ report.month }}</td>
+                    <td>Rp {{ report.nominal }}</td>
+                    <td>{{ report.vendor }}</td>
+                    <td>{{ report.phone }}</td>
+                    <td>{{ report.status }}</td>
                     <td>
-                        <!-- Form untuk menandai sebagai sudah dibayar -->
-                        <form action="/mark_paid" method="POST" onsubmit="return confirm('Apakah anda yakin ingin menandai sebagai sudah dibayar?')">
+                        <form action="/mark_paid" method="POST" onsubmit="return confirm('Apakah Anda yakin?')">
                             <input type="hidden" name="bdm_name" value="{{ report.name }}">
-                            <input type="hidden" name="nominal" value="{{ report.nominal }}">
-                            <button type="submit">Sudah Dibayar</button>
-                        </form>
-                        <!-- Form untuk menghapus pembayaran -->
-                        <form action="/delete_payment" method="POST" onsubmit="return confirm('Apakah anda yakin ingin menghapus pembayaran ini?')">
-                            <input type="hidden" name="bdm_name" value="{{ report.name }}">
-                            <input type="hidden" name="bulan" value="{{ report.month }}">
-                            <button type="submit">Hapus Pembayaran</button>
+                            <input type="hidden" name="month" value="{{ report.month }}">
+                            <button type="submit">Bayar</button>
                         </form>
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
+    </div>
 
-        <h3>Perhitungan Otomatis</h3>
+    <!-- Tabel untuk Data Cicilan yang Sudah Dibayar -->
+    <h3>Data Cicilan yang Sudah Dibayar</h3>
+    <div class="table-container">
         <table>
             <thead>
                 <tr>
+                    <th>No Kontrak</th>
+                    <th>Tanggal</th>
                     <th>Nama BDM</th>
-                    <th>Total Tagihan Tersisa</th>
+                    <th>Bulan</th>
+                    <th>Nominal Cicilan</th>
+                    <th>Vendor</th>
+                    <th>No HP</th>
+                    <th>Status Pembayaran</th>
                 </tr>
             </thead>
             <tbody>
-                {% for summary in summaries %}
+                {% for report in paid_reports %}
                 <tr>
-                    <td>{{ summary.bdm_name }}</td>
-                    <td>{{ summary.remaining }}</td>
+                    <td>{{ report.contract_no }}</td>
+                    <td>{{ report.date }}</td>
+                    <td>{{ report.name }}</td>
+                    <td>Bulan ke {{ report.month }}</td>
+                    <td>Rp {{ report.nominal }}</td>
+                    <td>{{ report.vendor }}</td>
+                    <td>{{ report.phone }}</td>
+                    <td>{{ report.status }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
+
+    {% endblock %}
 </body>
 </html>

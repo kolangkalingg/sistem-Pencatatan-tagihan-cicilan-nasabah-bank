@@ -1,0 +1,78 @@
+
+<!-- Register Page -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/all.css') }}">
+</head>
+<body>
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul>
+                {% for message in messages %}
+                    <li style="color: red;">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+
+    <h2>Register</h2>
+    <form action="/register" method="POST" novalidate>
+        <label for="username">Username</label>
+        <input 
+            type="text" 
+            name="username" 
+            id="username" 
+            required 
+            minlength="3" 
+            maxlength="255" 
+            pattern="^[a-zA-Z0-9_]+$" 
+            title="Username hanya boleh mengandung huruf, angka, dan underscore">
+        <span class="error-message" id="username-error"></span>
+
+        <label for="password">Password</label>
+        <input 
+            type="password" 
+            name="password" 
+            id="password" 
+            required 
+            minlength="6" 
+            title="Password harus memiliki setidaknya 6 karakter">
+        <span class="error-message" id="password-error"></span>
+
+        <button type="submit">Register</button>
+        <a href="/login">Back to Login</a>
+    </form>
+
+    <script>
+        // Client-side validation feedback
+        document.querySelector('form').addEventListener('submit', function (event) {
+            const username = document.getElementById('username');
+            const password = document.getElementById('password');
+
+            let valid = true;
+
+            if (!username.validity.valid) {
+                document.getElementById('username-error').innerText = username.title;
+                valid = false;
+            } else {
+                document.getElementById('username-error').innerText = '';
+            }
+
+            if (!password.validity.valid) {
+                document.getElementById('password-error').innerText = password.title;
+                valid = false;
+            } else {
+                document.getElementById('password-error').innerText = '';
+            }
+
+            if (!valid) {
+                event.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>

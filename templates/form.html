@@ -5,32 +5,142 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Input Data</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .error {
+            color: red;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        .form-group {
+            margin-bottom: 1.5em;
+        }
+    </style>
 </head>
 <body>
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <ul>
+            {% for message in messages %}
+                <li style="color: red;">{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+{% endwith %}
+
+
+
+{% extends "base.html" %}
+{% block content %}
+<div class="form-wrapper">
     <div class="form-container">
-        <h2>Input Data Cicilan</h2>
-        <form action="/submit" method="POST">
-            <label for="bdm_name">Nama BDM</label>
-            <input type="text" name="bdm_name" id="bdm_name" required>
-        
-            <label for="nominal">Nominal</label>
-            <input type="number" name="nominal" id="nominal" required>
-        
-            <label for="duration">Jangka Waktu (bulan)</label>
-            <input type="number" name="duration" id="duration" required>
+        <h2>Penginputan</h2>
+        <form id="inputForm" action="/submit" method="POST" novalidate>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="bdm_name">Nama BDM</label>
+                    <input type="text" name="bdm_name" id="bdm_name" required>
+                    <div class="error" id="error-bdm_name"></div>
+                </div>
+                <div class="form-group">
+                    <label for="nominal">Nominal</label>
+                    <input type="number" name="nominal" id="nominal" required>
+                    <div class="error" id="error-nominal"></div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="duration">Jangka Waktu (bulan)</label>
+                    <input type="number" name="duration" id="duration" required>
+                    <div class="error" id="error-duration"></div>
+                </div>
+                <div class="form-group">
+                    <label for="vendor_name">Nama Vendor</label>
+                    <input type="text" name="vendor_name" id="vendor_name">
+                    <div class="error" id="error-vendor_name"></div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="pic">PIC</label>
+                    <input type="text" name="pic" id="pic">
+                    <div class="error" id="error-pic"></div>
+                </div>
+                <div class="form-group">
+                    <label for="phone">No HP</label>
+                    <input type="text" name="phone" id="phone">
+                    <div class="error" id="error-phone"></div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="contract_no">No Kontrak</label>
+                    <input type="text" name="contract_no" id="contract_no" required>
+                    <div class="error" id="error-contract_no"></div>
+                </div>
+                <div class="form-group">
+                    <label for="date">Tanggal</label>
+                    <input type="date" name="date" id="date" required>
+                    <div class="error" id="error-date"></div>
+                </div>
+            </div>
 
-            <label for="vendor_name">Nama Vendor</label>
-            <input type="text" name="vendor_name" id="vendor_name">
-
-            <label for="pic">PIC</label>
-            <input type="text" name="pic" id="pic">
-
-            <label for="phone">No HP</label>
-            <input type="text" name="phone" id="phone">
-
-            <button type="submit">Submit</button>
+            <div class="form-buttons">
+                <button type="reset" class="reset-button">Reset</button>
+                <button type="submit" class="submit-button">Submit</button>
+            </div>
         </form>
-        <a href="/report" class="report-button">Lihat Laporan</a>
     </div>
+</div>
+
+<script>
+    document.getElementById('inputForm').addEventListener('submit', function(event) {
+        let isValid = true;
+
+        // Clear previous error messages
+        document.querySelectorAll('.error').forEach(el => el.textContent = '');
+
+        // Validate Nama BDM
+        const bdmName = document.getElementById('bdm_name');
+        if (!bdmName.value.trim()) {
+            document.getElementById('error-bdm_name').textContent = 'Nama BDM wajib diisi.';
+            isValid = false;
+        }
+
+        // Validate Nominal
+        const nominal = document.getElementById('nominal');
+        if (!nominal.value.trim() || Number(nominal.value) <= 0) {
+            document.getElementById('error-nominal').textContent = 'Nominal harus lebih dari 0.';
+            isValid = false;
+        }
+
+        // Validate Jangka Waktu
+        const duration = document.getElementById('duration');
+        if (!duration.value.trim() || Number(duration.value) <= 0) {
+            document.getElementById('error-duration').textContent = 'Jangka waktu harus lebih dari 0 bulan.';
+            isValid = false;
+        }
+
+        // Validate No Kontrak
+        const contractNo = document.getElementById('contract_no');
+        if (!contractNo.value.trim()) {
+            document.getElementById('error-contract_no').textContent = 'No Kontrak wajib diisi.';
+            isValid = false;
+        }
+
+        // Validate Tanggal
+        const date = document.getElementById('date');
+        if (!date.value.trim()) {
+            document.getElementById('error-date').textContent = 'Tanggal wajib diisi.';
+            isValid = false;
+        }
+
+        // Prevent form submission if invalid
+        if (!isValid) {
+            event.preventDefault();
+        }
+    });
+</script>
+
+{% endblock %}
 </body>
 </html>
