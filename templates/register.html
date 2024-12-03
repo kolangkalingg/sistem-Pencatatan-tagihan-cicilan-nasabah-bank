@@ -23,33 +23,36 @@
         <div class="form-container">
             <h2>Register</h2>
             <form action="/register" method="POST" autocomplete="off">
-                <div class="form-group">
-                    <label for="username">Username</label>
-                    <input type="text" id="username" name="username" placeholder="Enter your username" required autocomplete="off">
+                <div class="form-container">
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" name="username" placeholder="Enter your username" required autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" placeholder="Enter your password" required autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label for="nama">Nama</label>
+                        <input type="text" id="nama" name="nama" placeholder="Enter your full name" required autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label for="alamat">Alamat</label>
+                        <textarea id="alamat" name="alamat" placeholder="Enter your address" rows="3" required autocomplete="off"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="no_hp">No HP</label>
+                        <input type="text" id="no_hp" name="no_hp" placeholder="Enter your phone number" required autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" placeholder="Enter your email" required autocomplete="off">
+                    </div>
+                    <button type="submit">Register</button>
+                    <a href="/login">Back to Login</a>
                 </div>
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" name="password" placeholder="Enter your password" required autocomplete="off">
-                </div>
-                <div class="form-group">
-                    <label for="nama">Nama</label>
-                    <input type="text" id="nama" name="nama" placeholder="Enter your full name" required autocomplete="off">
-                </div>
-                <div class="form-group">
-                    <label for="alamat">Alamat</label>
-                    <textarea id="alamat" name="alamat" placeholder="Enter your address" rows="3" required autocomplete="off"></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="no_hp">No HP</label>
-                    <input type="text" id="no_hp" name="no_hp" placeholder="Enter your phone number" required autocomplete="off">
-                </div>
-                <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" name="email" placeholder="Enter your email" required autocomplete="off">
-                </div>
-                <button type="submit">Register</button>
-                <a href="/login">Back to Login</a>
             </form>
+            
             
         </div>
     </div>

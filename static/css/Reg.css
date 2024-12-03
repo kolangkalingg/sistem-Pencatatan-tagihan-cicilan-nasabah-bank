@@ -31,49 +31,49 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start; /* Start align to keep space for button */
     width: 100%;
-    max-width: 400px;
+    max-width: 800px;
+    height: auto;   
     background: white;
-    padding: 30px;
-    border-radius: 10px;
-    box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.2);
-}
-
-/* Form Title */
-h2 {
-    font-size: 2rem;
-    margin-bottom: 20px;
-    color: #444;
+    padding: 40px;
+    border-radius: 15px;
+    box-shadow: 0px 8px 30px rgba(0, 0, 0, 0.3);
+    position: relative;
 }
 
 /* Form Styling */
 .form-container {
+    display: flex;
+    flex-direction: column; /* Change from grid to column */
+    gap: 20px; /* Reduced gap for better centering */
     width: 100%;
+    justify-content: center; /* Center the inputs */
 }
 
 .form-group {
-    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
 }
 
 label {
     display: block;
     font-weight: bold;
-    margin-bottom: 5px;
+    margin-bottom: 8px;
     color: #555;
 }
 
-input, textarea {
+input, textarea, select {
     width: 100%;
-    padding: 10px;
+    padding: 12px;
     border: 1px solid #ccc;
-    border-radius: 5px;
+    border-radius: 8px;
     font-size: 1rem;
     background: #f9f9f9;
     transition: all 0.3s;
 }
 
-input:focus, textarea:focus {
+input:focus, textarea:focus, select:focus {
     border-color: #6a11cb;
     background: #fff;
     outline: none;
@@ -81,16 +81,19 @@ input:focus, textarea:focus {
 
 /* Button */
 button {
-    width: 100%;
-    padding: 12px;
-    font-size: 1rem;
+    width: 200px; /* Width of the button */
+    padding: 15px;
+    font-size: 1.2rem;
     font-weight: bold;
     color: white;
     background: #2575fc;
     border: none;
-    border-radius: 5px;
+    border-radius: 8px;
     cursor: pointer;
     transition: background 0.3s;
+    position: absolute;
+    bottom: 20px; /* Position button at the bottom */
+    right: 20px; /* Align button to the right */
 }
 
 button:hover {
@@ -100,8 +103,8 @@ button:hover {
 /* Link */
 a {
     display: inline-block;
-    margin-top: 15px;
-    font-size: 0.9rem;
+    margin-top: 20px;
+    font-size: 1rem;
     text-decoration: none;
     color: #2575fc;
     transition: color 0.3s;

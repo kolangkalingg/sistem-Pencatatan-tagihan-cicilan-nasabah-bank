@@ -14,7 +14,6 @@ def init_sqlite_db():
     conn = sqlite3.connect("billing_system.db")
     cursor = conn.cursor()
 
-    # Buat tabel users jika belum ada
     cursor.execute('''CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT NOT NULL UNIQUE,
@@ -25,7 +24,6 @@ def init_sqlite_db():
         email TEXT
     )''')
 
-    # Buat tabel obrolan jika belum ada
     cursor.execute('''CREATE TABLE IF NOT EXISTS obrolan (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT NOT NULL,
@@ -35,6 +33,7 @@ def init_sqlite_db():
 
     conn.commit()
     conn.close()
+
 
 
 def initialize_excel():
