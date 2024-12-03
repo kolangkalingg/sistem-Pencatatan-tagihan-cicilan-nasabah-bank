@@ -10,6 +10,9 @@ FILE_NAME = "data_tagihan.xlsx"
 app = Flask(__name__)
 app.secret_key = "your_secret_key"
 
+
+
+
 def init_sqlite_db():
     conn = sqlite3.connect("billing_system.db")
     cursor = conn.cursor()
@@ -33,7 +36,6 @@ def init_sqlite_db():
 
     conn.commit()
     conn.close()
-
 
 
 def initialize_excel():
@@ -62,6 +64,24 @@ def initialize_excel():
 
 init_sqlite_db()
 initialize_excel()
+
+def validate_row(row):
+    """
+    Validates a row of data to ensure all required fields are present and valid.
+    Returns True if valid, False otherwise.
+    """
+    try:
+        if row[0] is None or not isinstance(row[0], (int, str)):  # Contract No
+            return False
+        if row[1] is not None and not isinstance(row[1], str):  # Date
+            return False
+        if row[4] is not None and not isinstance(row[4], (int, float)):  # Nominal
+            return False
+        return True
+    except IndexError:
+        return False
+
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -142,6 +162,11 @@ def form():
 
 @app.route('/submit', methods=["POST"])
 def submit():
+    if 'username' not in session:
+        flash("Anda harus login untuk mengakses fitur ini.")
+        return redirect('/login')
+
+    # Ambil data form
     contract_no = request.form["contract_no"]
     date = request.form["date"]
     bdm_name = request.form["bdm_name"]
@@ -150,16 +175,36 @@ def submit():
     vendor_name = request.form.get("vendor_name", "")
     phone = request.form.get("phone", "")
 
+    # Hitung cicilan per bulan
     monthly_payment = nominal // duration
+
+    # Load workbook dan sheet
     workbook = openpyxl.load_workbook(FILE_NAME)
     unpaid_sheet = workbook["Data Cicilan yang Belum Dibayar"]
 
-    for month in range(1, duration + 1):
-        unpaid_sheet.append([contract_no, date, bdm_name, month, monthly_payment, vendor_name, phone, "Belum Dibayar"])
+    # Cari baris terakhir yang digunakan
+    last_row = unpaid_sheet.max_row
+    current_user = session['username']  # Nama user dari session
 
+    # Tambahkan nama user di baris pertama
+    unpaid_sheet.cell(row=last_row + 2, column=1, value=f"Diinput oleh: {current_user}")
+    unpaid_sheet.merge_cells(start_row=last_row + 2, start_column=1, end_row=last_row + 2, end_column=8)
+
+    # Tambahkan data cicilan di bawahnya
+    for month in range(1, duration + 1):
+        unpaid_sheet.append([
+            contract_no, date, bdm_name, month, monthly_payment, vendor_name, phone, "Belum Dibayar"
+        ])
+
+    # Tambahkan spasi (2 baris kosong)
+    unpaid_sheet.append([""] * 8)
+    unpaid_sheet.append([""] * 8)
+
+    # Simpan workbook
     workbook.save(FILE_NAME)
     flash("Data berhasil ditambahkan!")
     return redirect('/report')
+
 
 @app.route('/report')
 def report():
@@ -173,7 +218,12 @@ def report():
     unpaid_reports = []
     total_unpaid = 0
 
-    for row in unpaid_sheet.iter_rows(min_row=2, values_only=True):
+    for idx, row in enumerate(unpaid_sheet.iter_rows(min_row=2, values_only=True), start=2):
+        if not validate_row(row):
+            # Gantikan log_error dengan print jika ingin tetap melihat pesan error di konsol
+            print(f"Invalid row in Unpaid Sheet at line {idx}: {row}")
+            continue
+
         unpaid_reports.append({
             "contract_no": row[0],
             "date": row[1],
@@ -184,10 +234,16 @@ def report():
             "phone": row[6],
             "status": row[7],
         })
-        total_unpaid += row[4]
+        total_unpaid += row[4] if row[4] is not None else 0
 
-    paid_reports = [
-        {
+    paid_reports = []
+    for idx, row in enumerate(paid_sheet.iter_rows(min_row=2, values_only=True), start=2):
+        if not validate_row(row):
+            # Gantikan log_error dengan print jika ingin tetap melihat pesan error di konsol
+            print(f"Invalid row in Paid Sheet at line {idx}: {row}")
+            continue
+
+        paid_reports.append({
             "contract_no": row[0],
             "date": row[1],
             "name": row[2],
@@ -196,11 +252,15 @@ def report():
             "vendor": row[5],
             "phone": row[6],
             "status": "Pembayaran Selesai",
-        }
-        for row in paid_sheet.iter_rows(min_row=2, values_only=True)
-    ]
+        })
 
-    return render_template("report.html", unpaid_reports=unpaid_reports, paid_reports=paid_reports, total_unpaid=total_unpaid)
+    return render_template(
+        "report.html", 
+        unpaid_reports=unpaid_reports, 
+        paid_reports=paid_reports, 
+        total_unpaid=total_unpaid
+    )
+
 
 @app.route('/mark_paid', methods=['POST'])
 def mark_paid():
@@ -250,6 +310,8 @@ def chat():
 def logout():
     session.pop('username', None)
     return redirect('/login')
+
+
 
 if __name__ == "__main__":
     app.run(debug=True, use_reloader=False)

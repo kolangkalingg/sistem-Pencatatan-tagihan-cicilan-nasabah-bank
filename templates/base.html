@@ -8,10 +8,18 @@
 </head>
 <body>
     <nav>
-        <a href="/form">Tambah Data</a>
-        <a href="/report">Lihat Data</a>
-        <a href="/logout">Logout</a>
+        <div>
+            {% if session['username'] %}
+                <span>Halo, {{ session['username'] }}</span>
+            {% endif %}
+        </div>
+        <div>
+            <a href="/form">Tambah Data</a>
+            <a href="/report">Lihat Data</a>
+            <a href="/logout">Logout</a>
+        </div>
     </nav>
+    
     {% block content %}{% endblock %}
     <footer>
         <p>&copy; 2024 Balikpapan</p>

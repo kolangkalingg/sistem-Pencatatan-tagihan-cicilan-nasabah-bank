@@ -20,42 +20,36 @@ nav {
     background-color: #003366; /* Deep blue */
     color: white;
     display: flex;
-    justify-content: center;
-    padding: 1rem;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem; /* Add space around navbar items */
 }
 
+nav div {
+    display: flex;
+    align-items: center;
+}
+
+/* User Info */
+nav span {
+    color: #f9c846; /* Gold color for user info */
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-right: 2rem; /* Add some space between user info and links */
+}
+
+/* Navbar Links */
 nav a {
     color: #f9c846; /* Gold */
     text-decoration: none;
     margin: 0 1rem;
     font-weight: bold;
     transition: color 0.3s ease;
+    font-size: 1rem;
 }
 
 nav a:hover {
-    color: white;
-}
-
-/* Content Area */
-h2 {
-    color: #003366; /* Deep blue */
-    text-align: center;
-    margin: 2rem 0;
-}
-
-
-/* Links */
-a {
-    color: #f9c846; /* Gold */
-    text-decoration: none;
-    display: block;
-    text-align: center;
-    margin: 1rem 0;
-    transition: color 0.3s ease;
-}
-
-a:hover {
-    color: #003366; /* Deep blue */
+    color: white; /* Change link color on hover */
 }
 
 /* Footer */
@@ -65,4 +59,23 @@ footer {
     text-align: center;
     padding: 1rem;
     margin-top: auto;
+    font-size: 0.9rem;
+}
+
+/* Responsive Navbar */
+@media (max-width: 768px) {
+    nav {
+        flex-direction: column; /* Stack navbar items vertically */
+        gap: 1rem;
+        align-items: flex-start; /* Align items to the left */
+    }
+
+    nav div {
+        width: 100%; /* Make div take full width */
+        justify-content: space-between; /* Ensure spacing between user info and links */
+    }
+
+    nav a {
+        margin: 0.5rem 0; /* Stack links with some space */
+    }
 }
