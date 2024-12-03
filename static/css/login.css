@@ -1,0 +1,105 @@
+/* General Styling */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Arial', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: linear-gradient(135deg, #1e3a8a, #fbbf24); /* Biru dan Emas */
+    background-size: 200% 200%;
+    animation: gradientAnimation 8s ease infinite;
+    color: #333;
+}
+
+/* Animasi Gradien */
+@keyframes gradientAnimation {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+/* Form Styling */
+form {
+    background: rgba(255, 255, 255, 0.9); /* Transparan putih */
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Efek bayangan */
+    padding: 30px;
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+}
+
+/* Label Styling */
+label {
+    display: block;
+    font-weight: bold;
+    color: #1e3a8a; /* Warna biru gelap */
+    margin: 10px 0 5px;
+    text-align: left;
+}
+
+/* Input Styling */
+input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1em;
+    transition: border-color 0.3s;
+}
+
+/* Fokus Input */
+input:focus {
+    border-color: #1e3a8a; /* Fokus warna biru */
+    outline: none;
+    box-shadow: 0 0 4px rgba(30, 58, 138, 0.6); /* Efek bayangan biru */
+}
+
+/* Button Styling */
+button {
+    background-color: #1e3a8a; /* Biru gelap */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    width: 100%;
+}
+
+button:hover {
+    background-color: #163e74; /* Warna biru lebih gelap */
+}
+
+/* Link Styling */
+a {
+    display: inline-block;
+    margin-top: 15px;
+    color: #fbbf24; /* Warna emas */
+    text-decoration: none;
+    font-size: 0.9em;
+    transition: color 0.3s;
+}
+
+a:hover {
+    color: #ffda44; /* Warna emas lebih cerah */
+}
+
+/* Error Message Styling */
+.error-message {
+    color: red;
+    font-size: 0.85em;
+    margin-top: -10px;
+    margin-bottom: 10px;
+    text-align: left;
+}

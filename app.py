@@ -18,7 +18,11 @@ def init_sqlite_db():
     cursor.execute('''CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT NOT NULL UNIQUE,
-        password TEXT NOT NULL
+        password TEXT NOT NULL,
+        nama TEXT,
+        alamat TEXT,
+        no_hp TEXT,
+        email TEXT
     )''')
 
     # Buat tabel obrolan jika belum ada
@@ -31,6 +35,7 @@ def init_sqlite_db():
 
     conn.commit()
     conn.close()
+
 
 def initialize_excel():
     try:
@@ -88,9 +93,13 @@ def register():
     if request.method == 'POST':
         username = request.form['username'].strip()
         password = request.form['password'].strip()
+        nama = request.form['nama'].strip()
+        alamat = request.form['alamat'].strip()
+        no_hp = request.form['no_hp'].strip()
+        email = request.form['email'].strip()
 
-        if not username or not password:
-            flash("Username dan password tidak boleh kosong!")
+        if not username or not password or not nama or not alamat or not no_hp or not email:
+            flash("Semua field harus diisi!")
             return redirect('/register')
 
         conn = sqlite3.connect("billing_system.db")
@@ -98,7 +107,10 @@ def register():
         hashed_password = generate_password_hash(password)
 
         try:
-            cursor.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, hashed_password))
+            cursor.execute('''
+                INSERT INTO users (username, password, nama, alamat, no_hp, email) 
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (username, hashed_password, nama, alamat, no_hp, email))
             conn.commit()
             flash("Pendaftaran berhasil! Silakan login.")
             return redirect('/login')
@@ -107,6 +119,7 @@ def register():
         finally:
             conn.close()
     return render_template("register.html")
+
 
 @app.route('/')
 def index():
@@ -118,7 +131,15 @@ def index():
 def form():
     if 'username' not in session:
         return redirect('/login')
-    return render_template("form.html")
+
+    conn = sqlite3.connect("billing_system.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT nama, email FROM users WHERE username = ?", (session['username'],))
+    user_info = cursor.fetchone()
+    conn.close()
+
+    return render_template("form.html", user_info=user_info)
+
 
 @app.route('/submit', methods=["POST"])
 def submit():

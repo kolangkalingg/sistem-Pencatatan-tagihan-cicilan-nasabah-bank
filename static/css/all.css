@@ -43,49 +43,6 @@ h2 {
     margin: 2rem 0;
 }
 
-form {
-    max-width: 400px;
-    margin: 0 auto;
-    background-color: #ffffff; /* White background for forms */
-    padding: 2rem;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-form label {
-    display: block;
-    color: #003366; /* Deep blue */
-    margin: 1rem 0 0.5rem;
-    font-weight: bold;
-}
-
-form input {
-    width: 100%;
-    padding: 0.8rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    margin-bottom: 1rem;
-    font-size: 1rem;
-}
-
-form button {
-    width: 100%;
-    padding: 0.8rem;
-    border: none;
-    border-radius: 4px;
-    background-color: #003366; /* Deep blue */
-    color: white;
-    font-size: 1rem;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-form button:hover {
-    background-color: #f9c846; /* Gold */
-    color: #003366; /* Deep blue */
-}
 
 /* Links */
 a {

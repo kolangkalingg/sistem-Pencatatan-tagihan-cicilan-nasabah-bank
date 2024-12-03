@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/all.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
 </head>
 <body>
     {% with messages = get_flashed_messages() %}
@@ -16,9 +16,10 @@
             </ul>
         {% endif %}
     {% endwith %}
-
-    <h2>Login</h2>
+<!-- 
+    <h2>Login</h2> -->
     <form action="/login" method="POST" novalidate>
+        <h2>Login</h2>
         <label for="username">Username</label>
         <input 
             type="text" 

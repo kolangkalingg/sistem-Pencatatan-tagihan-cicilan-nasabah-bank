@@ -48,7 +48,8 @@ table thead, tbody tr {
 
 button {
     padding: 5px 10px;
-    background-color: #28a745;
+    background-color: #acc315;
+    width: 4rem;
     color: white;
     border: none;
     border-radius: 5px;
