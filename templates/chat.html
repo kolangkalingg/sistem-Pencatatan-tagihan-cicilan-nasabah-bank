@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Obrolan</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            color: #003366;
+            margin: 20px 0;
+        }
+        .chat-container {
+            width: 80%;
+            margin: 0 auto;
+        }
+        .chat-box {
+            background-color: #fff;
+            border: 1px solid #ccc;
+            height: 300px;
+            overflow-y: scroll;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+        .chat-message {
+            margin-bottom: 10px;
+        }
+        .timestamp {
+            font-size: 12px;
+            color: #666;
+        }
+        textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+        }
+        button {
+            background-color: #003366;
+            color: #FFD700;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #002244;
+        }
+    </style>
+</head>
+<body>
+    {% extends "base.html" %}
+{% block content %}
+    <h1>Obrolan</h1>
+    <div class="chat-container">
+        <div class="chat-box">
+            {% for chat in chat_history %}
+                <div class="chat-message">
+                    <strong>{{ chat[0] }}</strong>: {{ chat[1] }}
+                    <span class="timestamp">{{ chat[2] }}</span>
+                </div>
+            {% endfor %}
+        </div>
+        <form method="POST">
+            <textarea name="message" placeholder="Ketik pesan Anda..." required></textarea>
+            <button type="submit">Kirim</button>
+        </form>
+    </div>
+    {% endblock %}
+</body>
+</html>
