@@ -3,6 +3,9 @@ body {
     font-family: Arial, sans-serif;
     background-color: #f4f4f4;
     padding: 20px;
+    margin: 0;
+    box-sizing: border-box;
+    overflow-x: hidden; /* Hilangkan scroll horizontal */
 }
 
 h2, h3 {
@@ -11,22 +14,23 @@ h2, h3 {
 }
 
 .table-container {
-
     max-height: 400px;
-
     margin-bottom: 20px;
+    overflow-x: hidden; /* Pastikan tabel bisa di-scroll horizontal jika diperlukan */
 }
 
 /* Styling for tables */
 table {
     width: 100%;
     border-collapse: collapse;
+    table-layout: fixed; /* Pastikan kolom memiliki lebar tetap */
 }
 
 th, td {
     padding: 10px;
     text-align: left;
     border: 1px solid #ddd;
+    word-wrap: break-word; /* Agar teks panjang terputus dan tidak melewati kolom */
 }
 
 th {

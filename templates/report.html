@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/report.css') }}">
 </head>
 
+
 <body>
     
     {% extends "base.html" %}
@@ -87,6 +88,28 @@
             </tbody>
         </table>
     </div>
+
+    <div class="summary-section">
+        <h3>Ringkasan Data</h3>
+        <table class="summary-table">
+            <thead>
+                <tr>
+                    <th>No Kontrak</th>
+                    <th>Nama BDM</th>
+                    <th>Sisa Tagihan</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in summary_data %}
+                <tr>
+                    <td>{{ item.contract_no }}</td>
+                    <td>{{ item.bdm_name }}</td>
+                    <td>Rp {{ "{:,.0f}".format(item.sisa_tagihan) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>    
 
     {% endblock %}
 </body>

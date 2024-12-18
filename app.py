@@ -68,6 +68,8 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+
+
 def initialize_excel():
     try:
         workbook = openpyxl.load_workbook(FILE_NAME)
@@ -90,10 +92,50 @@ def initialize_excel():
             "No HP", "Status Pembayaran"
         ])
 
+    if "Ringkasan Data" not in workbook.sheetnames:
+        sheet = workbook.create_sheet("Ringkasan Data")
+        sheet.append(["No Kontrak", "Nama BDM", "Sisa Tagihan"])  # Header
+
+
     workbook.save(FILE_NAME)
 
 init_sqlite_db()
 initialize_excel()
+
+
+def update_summary_sheet(workbook):
+    unpaid_sheet = workbook["Data Cicilan yang Belum Dibayar"]
+    summary_sheet = workbook["Ringkasan Data"]
+
+    # Hapus semua data sebelumnya, tetapi simpan header
+    summary_sheet.delete_rows(2, summary_sheet.max_row)
+
+    # Mengumpulkan data ringkasan
+    summary_data = {}
+    for row in unpaid_sheet.iter_rows(min_row=2, values_only=True):
+        if row[0] and isinstance(row[4], (int, float)):  # Pastikan No Kontrak dan Nominal valid
+            contract_no = row[0]
+            bdm_name = row[2]
+            nominal = row[4]
+
+            if contract_no not in summary_data:
+                summary_data[contract_no] = {
+                    "bdm_name": bdm_name,
+                    "sisa_tagihan": 0
+                }
+            summary_data[contract_no]["sisa_tagihan"] += nominal
+
+    # Menuliskan ringkasan data ke sheet
+    for contract_no, data in summary_data.items():
+        summary_sheet.append([
+            contract_no,
+            data["bdm_name"],
+            data["sisa_tagihan"]
+        ])
+
+    workbook.save(FILE_NAME)
+
+
 
 def validate_row(row):
     """
@@ -110,40 +152,6 @@ def validate_row(row):
         return True
     except IndexError:
         return False
-
-def update_calculation_sheet():
-    workbook = openpyxl.load_workbook(FILE_NAME)
-
-    # Jika sheet belum ada, buat sheet baru
-    if "Perhitungan Otomatis" not in workbook.sheetnames:
-        calc_sheet = workbook.create_sheet("Perhitungan Otomatis")
-        calc_sheet.append(["Nama BDM", "Sisa Bulan", "Sisa Nominal"])
-
-    calc_sheet = workbook["Perhitungan Otomatis"]
-    unpaid_sheet = workbook["Data Cicilan yang Belum Dibayar"]
-
-    # Reset isi sheet "Perhitungan Otomatis"
-    calc_sheet.delete_rows(2, calc_sheet.max_row)
-
-    # Hitung total per BDM
-    bdm_data = {}
-    for row in unpaid_sheet.iter_rows(min_row=2, values_only=True):
-        if row[2] is None or row[4] is None:
-            continue
-        bdm_name = row[2]
-        nominal = row[4]
-
-        if bdm_name in bdm_data:
-            bdm_data[bdm_name]["sisa_bulan"] += 1
-            bdm_data[bdm_name]["sisa_nominal"] += nominal
-        else:
-            bdm_data[bdm_name] = {"sisa_bulan": 1, "sisa_nominal": nominal}
-
-    # Tambahkan hasil ke sheet
-    for bdm, data in bdm_data.items():
-        calc_sheet.append([bdm, data["sisa_bulan"], data["sisa_nominal"]])
-
-    workbook.save(FILE_NAME)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -271,10 +279,9 @@ def submit():
         unpaid_sheet.append(["" for _ in range(8)])
         unpaid_sheet.append(["" for _ in range(8)])
 
-        # Update sheet perhitungan otomatis
-        update_calculation_sheet(workbook)
 
         # Simpan workbook
+        update_summary_sheet(workbook)
         workbook.save(FILE_NAME)
         flash("Data berhasil ditambahkan!")
 
@@ -284,40 +291,6 @@ def submit():
     return redirect('/report')
 
 
-def update_calculation_sheet(workbook):
-    """
-    Fungsi untuk memperbarui sheet "Perhitungan Otomatis" dengan total sisa bulan dan nominal.
-    """
-    if "Perhitungan Otomatis" not in workbook.sheetnames:
-        calc_sheet = workbook.create_sheet("Perhitungan Otomatis")
-        calc_sheet.append(["Nama BDM", "Sisa Bulan", "Sisa Nominal"])
-    else:
-        calc_sheet = workbook["Perhitungan Otomatis"]
-        calc_sheet.delete_rows(2, calc_sheet.max_row)  # Reset isi sheet
-
-    unpaid_sheet = workbook["Data Cicilan yang Belum Dibayar"]
-    bdm_totals = {}
-
-    # Hitung sisa bulan dan nominal untuk setiap BDM
-    for row in unpaid_sheet.iter_rows(min_row=2, values_only=True):
-        if not row or row[2] is None:
-            continue
-        bdm_name = row[2]
-        nominal = row[4]
-
-        if bdm_name in bdm_totals:
-            bdm_totals[bdm_name]['sisa_bulan'] += 1
-            bdm_totals[bdm_name]['sisa_nominal'] += nominal
-        else:
-            bdm_totals[bdm_name] = {'sisa_bulan': 1, 'sisa_nominal': nominal}
-
-    # Masukkan hasil perhitungan ke sheet
-    for bdm, data in bdm_totals.items():
-        calc_sheet.append([bdm, data['sisa_bulan'], data['sisa_nominal']])
-
-    workbook.save(FILE_NAME)
-    flash("Data berhasil ditambahkan!")
-    return redirect('/report')
 
 
 @app.route('/report')
@@ -371,59 +344,78 @@ def report():
             "status": "Pembayaran Selesai",
         })
 
+    summary_data = []
+    summary_sheet = workbook["Ringkasan Data"]
+    for row in summary_sheet.iter_rows(min_row=2, values_only=True):
+        summary_data.append({
+        "contract_no": row[0],
+        "bdm_name": row[1],
+        "sisa_tagihan": row[2]
+    })
+
 
     return render_template(
-        "report.html", 
-        unpaid_reports=unpaid_reports, 
-        paid_reports=paid_reports, 
-        total_unpaid=total_unpaid
+        "report.html",
+        unpaid_reports=unpaid_reports,
+        paid_reports=paid_reports,
+        total_unpaid=total_unpaid,
+        summary_data=summary_data
     )
+
 
 
 @app.route('/mark_paid', methods=['POST'])
 def mark_paid():
-    # Validasi session login
     if 'username' not in session:
         flash("Anda harus login untuk mengakses fitur ini.")
         return redirect('/login')
 
-    # Ambil input dari form
     bdm_name = request.form["bdm_name"].strip()
     month = int(request.form["month"])
-    current_user = session['username']  # Nama user yang sedang login
+    current_user = session['username']
 
-    # Buka workbook Excel
     workbook = openpyxl.load_workbook(FILE_NAME)
-    unpaid_sheet = workbook.get_sheet_by_name("Data Cicilan yang Belum Dibayar")
-    paid_sheet = workbook.get_sheet_by_name("Data Cicilan yang Sudah Dibayar")
+    unpaid_sheet = workbook["Data Cicilan yang Belum Dibayar"]
+    paid_sheet = workbook["Data Cicilan yang Sudah Dibayar"]
 
-    row_to_delete = None  # Untuk menyimpan baris yang akan dihapus
-    data_to_transfer = None  # Untuk menyimpan data yang akan dipindahkan
+    row_to_delete = None
+    data_to_transfer = None
+    user_section_exists = False
 
-    # Cari data cicilan di sheet "Data Cicilan yang Belum Dibayar"
+    # Periksa apakah ada bagian untuk user di sheet "Data Cicilan yang Sudah Dibayar"
+    for row in paid_sheet.iter_rows(min_row=2, values_only=True):
+        if row[0] and f"Diinput oleh: {current_user}" in row[0]:
+            user_section_exists = True
+            break
+
+    # Cari data yang sesuai di sheet "Data Cicilan yang Belum Dibayar"
     for row in unpaid_sheet.iter_rows(min_row=2, values_only=False):
         if row[2].value == bdm_name and row[3].value == month:
-            # Ambil data dan tandai baris untuk dihapus
             data_to_transfer = [cell.value for cell in row]
             row_to_delete = row[0].row
             break
 
-    # Jika data ditemukan
     if data_to_transfer and row_to_delete:
-        # Tambahkan informasi "Diinput oleh" di sheet "Data Cicilan yang Sudah Dibayar"
-        paid_sheet.append(["Diinput oleh: " + current_user] + [""] * 7)  # Header user
-        paid_sheet.append(data_to_transfer[:-1] + ["Pembayaran Selesai"])  # Data pembayaran
+        # Tambahkan header jika belum ada
+        if not user_section_exists:
+            paid_sheet.append([f"Diinput oleh: {current_user}"] + [""] * 7)
 
-        # Hapus baris di sheet "Data Cicilan yang Belum Dibayar"
+        # Tambahkan data ke sheet "Data Cicilan yang Sudah Dibayar"
+        paid_sheet.append(data_to_transfer[:-1] + ["Pembayaran Selesai"])
+
+        # Hapus data dari sheet "Data Cicilan yang Belum Dibayar"
         unpaid_sheet.delete_rows(row_to_delete)
 
-        # Simpan workbook
         workbook.save(FILE_NAME)
         flash("Data berhasil dipindahkan ke laporan cicilan yang sudah dibayar.")
+
+        # Perbarui Ringkasan Data
+        update_summary_sheet(workbook)
     else:
         flash("Data tidak ditemukan atau sudah dibayar.")
 
     return redirect('/report')
+
 
 
 @app.route('/chat', methods=['GET', 'POST'])
