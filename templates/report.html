@@ -38,7 +38,7 @@
                     <td>{{ report.date }}</td>
                     <td>{{ report.name }}</td>
                     <td>Bulan ke {{ report.month }}</td>
-                    <td>Rp {{ report.nominal }}</td>
+                    <td>Rp {{ "{:,.0f}".format(report.nominal) if report.nominal else "0" }}</td>
                     <td>{{ report.vendor }}</td>
                     <td>{{ report.phone }}</td>
                     <td>{{ report.status }}</td>
@@ -79,7 +79,7 @@
                     <td>{{ report.date }}</td>
                     <td>{{ report.name }}</td>
                     <td>Bulan ke {{ report.month }}</td>
-                    <td>Rp {{ report.nominal }}</td>
+                    <td>Rp {{ "{:,.0f}".format(report.nominal) if report.nominal else "0" }}</td>
                     <td>{{ report.vendor }}</td>
                     <td>{{ report.phone }}</td>
                     <td>{{ report.status }}</td>

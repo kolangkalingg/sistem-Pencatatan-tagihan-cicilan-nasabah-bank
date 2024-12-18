@@ -10,7 +10,8 @@ body {
 
 h2, h3 {
     text-align: center;
-    margin-bottom: 20px;
+    color: #003366;
+    margin: 20px 0;
 }
 
 .table-container {
@@ -21,35 +22,30 @@ h2, h3 {
 
 /* Styling for tables */
 table {
-    width: 100%;
+    width: 90%;
+    margin: 20px auto;
     border-collapse: collapse;
-    table-layout: fixed; /* Pastikan kolom memiliki lebar tetap */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
-
 th, td {
     padding: 10px;
-    text-align: left;
     border: 1px solid #ddd;
-    word-wrap: break-word; /* Agar teks panjang terputus dan tidak melewati kolom */
+    text-align: center;
 }
-
 th {
-    background-color: #f2f2f2;
+    background-color: #003366;
+    color: #FFD700;
 }
-
-/* Scrollbar styles */
-table tbody {
-    display: block;
-    max-height: 300px;
-    overflow-y: auto;
+tr:nth-child(even) {
+    background-color: #f9f9f9;
 }
-
-table thead, tbody tr {
-    display: table;
-    width: 100%;
-    table-layout: fixed;
+button {
+    background-color: #003366;
+    color: #FFD700;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
 }
-
 button {
     padding: 5px 10px;
     background-color: #acc315;

@@ -296,123 +296,147 @@ def submit():
 @app.route('/report')
 def report():
     if 'username' not in session:
+        flash("Anda harus login untuk mengakses fitur ini.")
         return redirect('/login')
 
-    workbook = openpyxl.load_workbook(FILE_NAME)
-    unpaid_sheet = workbook["Data Cicilan yang Belum Dibayar"]
-    paid_sheet = workbook["Data Cicilan yang Sudah Dibayar"]
+    try:
+        # Load workbook dan sheets
+        workbook = openpyxl.load_workbook(FILE_NAME)
+        unpaid_sheet = workbook["Data Cicilan yang Belum Dibayar"]
+        paid_sheet = workbook["Data Cicilan yang Sudah Dibayar"]
 
-    unpaid_reports = []
-    total_unpaid = 0
+        # Proses data cicilan belum dibayar
+        unpaid_reports = []
+        total_unpaid = 0
+        for idx, row in enumerate(unpaid_sheet.iter_rows(min_row=2, values_only=True), start=2):
+            if not validate_row(row):
+                print(f"Invalid row in Unpaid Sheet at line {idx}: {row}")
+                continue
 
-    for idx, row in enumerate(unpaid_sheet.iter_rows(min_row=2, values_only=True), start=2):
-        if not validate_row(row):
-            # Gantikan log_error dengan print jika ingin tetap melihat pesan error di konsol
-            print(f"Invalid row in Unpaid Sheet at line {idx}: {row}")
-            continue
+            unpaid_reports.append({
+                "contract_no": row[0],
+                "date": row[1],
+                "name": row[2],
+                "month": row[3],
+                "nominal": row[4],
+                "vendor": row[5],
+                "phone": row[6],
+                "status": row[7],
+            })
+            total_unpaid += row[4] if row[4] is not None else 0
 
-        unpaid_reports.append({
-            "contract_no": row[0],
-            "date": row[1],
-            "name": row[2],
-            "month": row[3],
-            "nominal": row[4],
-            "vendor": row[5],
-            "phone": row[6],
-            "status": row[7],
-        })
-        total_unpaid += row[4] if row[4] is not None else 0
+        # Proses data cicilan yang sudah dibayar
+        paid_reports = []
+        for idx, row in enumerate(paid_sheet.iter_rows(min_row=2, values_only=True), start=2):
+            # Lewati baris yang mengandung "Diinput oleh"
+            if row[0] and "Diinput oleh" in row[0]:
+                continue
 
-    paid_reports = []
-    for idx, row in enumerate(paid_sheet.iter_rows(min_row=2, values_only=True), start=2):
-    # Lewati baris yang mengandung "Diinput oleh"
-        if row[0] and "Diinput oleh" in row[0]:
-            continue  # Baris dilewati
+            if not validate_row(row):
+                print(f"Invalid row in Paid Sheet at line {idx}: {row}")
+                continue
 
-        if not validate_row(row):
-            print(f"Invalid row in Paid Sheet at line {idx}: {row}")
-            continue
+            paid_reports.append({
+                "contract_no": row[0],
+                "date": row[1],
+                "name": row[2],
+                "month": row[3],
+                "nominal": row[4],
+                "vendor": row[5],
+                "phone": row[6],
+                "status": "Pembayaran Selesai",
+            })
 
-        paid_reports.append({
-            "contract_no": row[0],
-            "date": row[1],
-            "name": row[2],
-            "month": row[3],
-            "nominal": row[4],
-            "vendor": row[5],
-            "phone": row[6],
-            "status": "Pembayaran Selesai",
-        })
+        # Ringkasan data
+        summary_data = []
+        summary_sheet = workbook["Ringkasan Data"]
+        for row in summary_sheet.iter_rows(min_row=2, values_only=True):
+            summary_data.append({
+                "contract_no": row[0],
+                "bdm_name": row[1],
+                "sisa_tagihan": row[2],
+            })
 
-    summary_data = []
-    summary_sheet = workbook["Ringkasan Data"]
-    for row in summary_sheet.iter_rows(min_row=2, values_only=True):
-        summary_data.append({
-        "contract_no": row[0],
-        "bdm_name": row[1],
-        "sisa_tagihan": row[2]
-    })
+        # Render halaman laporan
+        return render_template(
+            "report.html",
+            unpaid_reports=unpaid_reports,
+            paid_reports=paid_reports,
+            total_unpaid=total_unpaid,
+            summary_data=summary_data
+        )
 
+    except Exception as e:
+        flash(f"Terjadi kesalahan saat memuat laporan: {str(e)}")
+        return redirect('/')
 
-    return render_template(
-        "report.html",
-        unpaid_reports=unpaid_reports,
-        paid_reports=paid_reports,
-        total_unpaid=total_unpaid,
-        summary_data=summary_data
-    )
 
 
 
 @app.route('/mark_paid', methods=['POST'])
 def mark_paid():
     if 'username' not in session:
-        flash("Anda harus login untuk mengakses fitur ini.")
+        flash("Anda harus login untuk mengakses fitur ini.", "danger")
         return redirect('/login')
 
-    bdm_name = request.form["bdm_name"].strip()
-    month = int(request.form["month"])
-    current_user = session['username']
+    try:
+        # Ambil data dari form
+        bdm_name = request.form["bdm_name"].strip()
+        month_input = request.form.get("month")
+        if not month_input or not month_input.isdigit():
+            flash("Bulan harus berupa angka valid.", "warning")
+            return redirect('/report')
 
-    workbook = openpyxl.load_workbook(FILE_NAME)
-    unpaid_sheet = workbook["Data Cicilan yang Belum Dibayar"]
-    paid_sheet = workbook["Data Cicilan yang Sudah Dibayar"]
+        month = int(month_input)
+        current_user = session['username']
 
-    row_to_delete = None
-    data_to_transfer = None
-    user_section_exists = False
+        # Load workbook dan sheets
+        try:
+            workbook = openpyxl.load_workbook(FILE_NAME)
+        except PermissionError:
+            flash("File sedang digunakan atau tidak bisa diakses. Tutup file Excel terlebih dahulu!", "danger")
+            return redirect('/report')
 
-    # Periksa apakah ada bagian untuk user di sheet "Data Cicilan yang Sudah Dibayar"
-    for row in paid_sheet.iter_rows(min_row=2, values_only=True):
-        if row[0] and f"Diinput oleh: {current_user}" in row[0]:
-            user_section_exists = True
-            break
+        unpaid_sheet = workbook["Data Cicilan yang Belum Dibayar"]
+        paid_sheet = workbook["Data Cicilan yang Sudah Dibayar"]
 
-    # Cari data yang sesuai di sheet "Data Cicilan yang Belum Dibayar"
-    for row in unpaid_sheet.iter_rows(min_row=2, values_only=False):
-        if row[2].value == bdm_name and row[3].value == month:
-            data_to_transfer = [cell.value for cell in row]
-            row_to_delete = row[0].row
-            break
+        row_to_delete = None
+        data_to_transfer = None
 
-    if data_to_transfer and row_to_delete:
-        # Tambahkan header jika belum ada
-        if not user_section_exists:
-            paid_sheet.append([f"Diinput oleh: {current_user}"] + [""] * 7)
+        # Loop menggunakan indeks baris
+        for idx, row in enumerate(unpaid_sheet.iter_rows(min_row=2, values_only=True), start=2):
+            if row[2] == bdm_name and row[3] == month:
+                data_to_transfer = list(row)
+                row_to_delete = idx
+                break
 
-        # Tambahkan data ke sheet "Data Cicilan yang Sudah Dibayar"
-        paid_sheet.append(data_to_transfer[:-1] + ["Pembayaran Selesai"])
+        if data_to_transfer and row_to_delete:
+            # Tambahkan header jika belum ada untuk user di sheet "Data Cicilan yang Sudah Dibayar"
+            user_section_exists = any(
+                paid_row[0] and f"Diinput oleh: {current_user}" in paid_row[0]
+                for paid_row in paid_sheet.iter_rows(min_row=2, values_only=True)
+            )
+            if not user_section_exists:
+                paid_sheet.append([f"Diinput oleh: {current_user}"] + [""] * 7)
 
-        # Hapus data dari sheet "Data Cicilan yang Belum Dibayar"
-        unpaid_sheet.delete_rows(row_to_delete)
+            # Tambahkan data ke sheet "Data Cicilan yang Sudah Dibayar"
+            paid_sheet.append(data_to_transfer[:-1] + ["Pembayaran Selesai"])
 
-        workbook.save(FILE_NAME)
-        flash("Data berhasil dipindahkan ke laporan cicilan yang sudah dibayar.")
+            # Hapus baris dari "Data Cicilan yang Belum Dibayar"
+            unpaid_sheet.delete_rows(row_to_delete)
 
-        # Perbarui Ringkasan Data
-        update_summary_sheet(workbook)
-    else:
-        flash("Data tidak ditemukan atau sudah dibayar.")
+            # Simpan workbook dengan pengecekan error
+            try:
+                update_summary_sheet(workbook)
+                workbook.save(FILE_NAME)
+                flash("Data berhasil dipindahkan ke laporan cicilan yang sudah dibayar.", "success")
+            except PermissionError:
+                flash("Tidak dapat menyimpan perubahan. File mungkin sedang digunakan.", "danger")
+        else:
+            flash("Data tidak ditemukan atau sudah dibayar.", "warning")
+
+    except Exception as e:
+        flash(f"Terjadi kesalahan: {str(e)}", "danger")
 
     return redirect('/report')
 
