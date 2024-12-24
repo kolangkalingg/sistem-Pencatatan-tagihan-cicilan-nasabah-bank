@@ -38,6 +38,28 @@
         tr:hover {
             background-color: #e6f7ff;
         }
+        .btn {
+            padding: 6px 12px;
+            font-size: 0.9em;
+            cursor: pointer;
+            border-radius: 4px;
+            text-align: center;
+            display: inline-block;
+        }
+        .btn-update {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            margin-right: 10px;
+        }
+        .btn-delete {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+        }
+        .btn:hover {
+            opacity: 0.9;
+        }
     </style>
 </head>
 <body>
@@ -53,6 +75,7 @@
                 <th>Email</th>
                 <th>Role</th>
                 <th>Approved</th>
+                <th>Aksi</th> <!-- Kolom aksi untuk tombol update dan delete -->
             </tr>
         </thead>
         <tbody>
@@ -64,6 +87,13 @@
                 <td>{{ user[6] }}</td>
                 <td>{{ user[7] }}</td>
                 <td>{{ 'Ya' if user[8] == 1 else 'Belum' }}</td>
+                <td>
+                    <a href="{{ url_for('update_user', user_id=user[0]) }}">Update</a> |
+                    <form action="{{ url_for('delete_user', user_id=user[0]) }}" method="POST" style="display:inline;">
+                        <button type="submit" onclick="return confirm('Yakin ingin menghapus pengguna ini?')">Delete</button>
+                    </form>
+                </td>
+                
             </tr>
             {% endfor %}
         </tbody>

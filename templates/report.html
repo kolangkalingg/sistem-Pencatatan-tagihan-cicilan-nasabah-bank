@@ -5,13 +5,91 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Laporan Bulanan</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/report.css') }}">
+    <style>
+        .table-container {
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        .btn {
+            padding: 5px 10px;
+            font-size: 0.9em;
+            cursor: pointer;
+        }
+        .btn-warning {
+            background-color: #ffc107;
+            color: #000;
+            border: none;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+            color: #fff;
+            border: none;
+        }
+        .btn-warning:hover, .btn-danger:hover {
+            opacity: 0.9;
+        }
+    </style>
 </head>
 
-
 <body>
-    
     {% extends "base.html" %}
     {% block content %}
+
+ <!-- Tabel Ringkasan Data dengan Tombol Aksi -->
+ <div class="summary-section">
+    <h3>Data</h3>
+    <div class="table-container">
+        <table class="summary-table">
+            <thead>
+                <tr>
+                    <th>No Kontrak</th>
+                    <th>Nama BDM</th>
+                    <th>Sisa Tagihan</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in summary_data %}
+                <tr>
+                    <td>{{ item.contract_no }}</td>
+                    <td>{{ item.bdm_name }}</td>
+                    <td>Rp {{ "{:,.0f}".format(item.sisa_tagihan) }}</td>
+                    <td>
+                        <!-- Tombol Update -->
+                        <form action="{{ url_for('edit_summary_data') }}" method="GET" style="display:inline;">
+                            <input type="hidden" name="contract_no" value="{{ item.contract_no }}">
+                            <button type="submit" class="btn btn-warning">Update</button>
+                        </form>
+
+                        <!-- Tombol Delete -->
+                        <form action="{{ url_for('delete_summary_data') }}" method="POST" style="display:inline;" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data ini?')">
+                            <input type="hidden" name="contract_no" value="{{ item.contract_no }}">
+                            <button type="submit" class="btn btn-danger">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+
+
 
     <!-- Tabel untuk Data Cicilan yang Belum Dibayar -->
     <h3>Data Cicilan yang Belum Dibayar</h3>
@@ -43,10 +121,10 @@
                     <td>{{ report.phone }}</td>
                     <td>{{ report.status }}</td>
                     <td>
-                        <form action="/mark_paid" method="POST" onsubmit="return confirm('Apakah Anda yakin?')">
+                        <form action="/mark_paid" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menandai ini sebagai sudah dibayar?')">
                             <input type="hidden" name="bdm_name" value="{{ report.name }}">
                             <input type="hidden" name="month" value="{{ report.month }}">
-                            <button type="submit">Bayar</button>
+                            <button type="submit" class="btn btn-warning">Bayar</button>
                         </form>
                     </td>
                 </tr>
@@ -89,27 +167,7 @@
         </table>
     </div>
 
-    <div class="summary-section">
-        <h3>Ringkasan Data</h3>
-        <table class="summary-table">
-            <thead>
-                <tr>
-                    <th>No Kontrak</th>
-                    <th>Nama BDM</th>
-                    <th>Sisa Tagihan</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in summary_data %}
-                <tr>
-                    <td>{{ item.contract_no }}</td>
-                    <td>{{ item.bdm_name }}</td>
-                    <td>Rp {{ "{:,.0f}".format(item.sisa_tagihan) }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>    
+   
 
     {% endblock %}
 </body>

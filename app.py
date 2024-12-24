@@ -447,6 +447,194 @@ def mark_paid():
 
     return redirect('/report')
 
+@app.route('/delete_summary_data', methods=['POST'])
+def delete_summary_data():
+    if 'username' not in session:
+        flash("Anda harus login untuk mengakses fitur ini.")
+        return redirect('/login')
+
+    try:
+        contract_no = request.form['contract_no']
+
+        workbook = openpyxl.load_workbook(FILE_NAME)
+        summary_sheet = workbook["Ringkasan_Data"]
+
+        for idx, row in enumerate(summary_sheet.iter_rows(min_row=2, values_only=True), start=2):
+            if row[0] == contract_no:
+                summary_sheet.delete_rows(idx)
+                workbook.save(FILE_NAME)
+                flash("Data berhasil dihapus!", "success")
+                return redirect('/report')
+
+        flash("Data tidak ditemukan!", "warning")
+    except Exception as e:
+        flash(f"Terjadi kesalahan: {str(e)}", "danger")
+
+    return redirect('/report')
+
+@app.route('/edit_summary_data', methods=["GET", "POST"])
+def edit_summary_data():
+    if request.method == "GET":
+        contract_no = request.args.get("contract_no")
+        # Ambil data berdasarkan `contract_no` untuk ditampilkan di form edit
+        # Misalnya:
+        workbook = openpyxl.load_workbook(FILE_NAME)
+        unpaid_sheet = workbook["Data_Cicilan_yang_Belum_Dibayar"]
+
+        # Cari data berdasarkan `contract_no`
+        data_to_edit = []
+        for row in unpaid_sheet.iter_rows(values_only=True):
+            if row[0] == contract_no:  # Asumsi kolom pertama adalah `No Kontrak`
+                data_to_edit.append(row)
+
+        if not data_to_edit:
+            flash("Data tidak ditemukan.")
+            return redirect('/report')
+
+        return render_template("edit_summary.html", data=data_to_edit)
+
+    elif request.method == "POST":
+        # Proses update data
+        try:
+            contract_no = request.form["contract_no"]
+            bdm_name = request.form["bdm_name"]
+            nominal = int(request.form["nominal"])
+            duration = int(request.form["duration"])
+            vendor_name = request.form.get("vendor_name", "")
+            phone = request.form.get("phone", "")
+
+            # Perbarui data di sheet
+            workbook = openpyxl.load_workbook(FILE_NAME)
+            unpaid_sheet = workbook["Data_Cicilan_yang_Belum_Dibayar"]
+
+            # Hapus data lama
+            rows_to_delete = []
+            for row in unpaid_sheet.iter_rows(values_only=False):
+                if row[0].value == contract_no:  # Asumsi kolom pertama adalah `No Kontrak`
+                    rows_to_delete.append(row[0].row)
+
+            for row_idx in sorted(rows_to_delete, reverse=True):
+                unpaid_sheet.delete_rows(row_idx)
+
+            # Tambahkan data baru
+            for month in range(1, duration + 1):
+                unpaid_sheet.append([
+                    contract_no, "", bdm_name, month, nominal // duration, vendor_name, phone, "Belum Dibayar"
+                ])
+
+            workbook.save(FILE_NAME)
+            flash("Data berhasil diperbarui!")
+        except Exception as e:
+            flash(f"Terjadi kesalahan: {str(e)}")
+
+        return redirect('/report')
+
+@app.route('/edit/<int:data_id>', methods=["GET"])
+def edit(data_id):
+    if 'username' not in session:
+        flash("Anda harus login untuk mengakses fitur ini.")
+        return redirect('/login')
+
+    try:
+        # Load workbook dan sheet
+        workbook = openpyxl.load_workbook(FILE_NAME)
+        unpaid_sheet = workbook["Data_Cicilan_yang_Belum_Dibayar"]
+
+        # Cari data berdasarkan ID
+        data = None
+        for row in range(1, unpaid_sheet.max_row + 1):
+            if unpaid_sheet.cell(row=row, column=9).value == data_id:  # Asumsi ID disimpan di kolom 9
+                data = {
+                    "id": data_id,
+                    "contract_no": unpaid_sheet.cell(row=row, column=1).value,
+                    "date": unpaid_sheet.cell(row=row, column=2).value,
+                    "bdm_name": unpaid_sheet.cell(row=row, column=3).value,
+                    "nominal": unpaid_sheet.cell(row=row, column=5).value * unpaid_sheet.cell(row=row, column=4).value,  # Nominal total
+                    "duration": unpaid_sheet.cell(row=row, column=4).value,
+                    "vendor_name": unpaid_sheet.cell(row=row, column=6).value,
+                    "phone": unpaid_sheet.cell(row=row, column=7).value,
+                }
+                break
+
+        if not data:
+            flash("Data tidak ditemukan.")
+            return redirect('/report')
+
+        # Kirim data ke template edit_summary.html
+        return render_template("edit_summary.html", data=data)
+
+    except Exception as e:
+        flash(f"Terjadi kesalahan: {str(e)}")
+        return redirect('/report')
+
+
+@app.route('/update', methods=["POST"])
+def update():
+    if 'username' not in session:
+        flash("Anda harus login untuk mengakses fitur ini.")
+        return redirect('/login')
+
+    try:
+        # Ambil data form
+        data_id = int(request.form["id"])  # ID baris yang diupdate
+        contract_no = request.form["contract_no"]
+        date = request.form["date"]
+        bdm_name = request.form["bdm_name"]
+        nominal = int(request.form["nominal"])
+        duration = int(request.form["duration"])
+        vendor_name = request.form.get("vendor_name", "")
+        phone = request.form.get("phone", "")
+
+        # Hitung cicilan per bulan
+        monthly_payment = nominal // duration
+
+        # Load workbook dan sheet
+        workbook = openpyxl.load_workbook(FILE_NAME)
+        unpaid_sheet = workbook["Data_Cicilan_yang_Belum_Dibayar"]
+
+        # Hapus data lama berdasarkan ID (ID digunakan sebagai penanda baris)
+        row_to_delete = None
+        for row in range(1, unpaid_sheet.max_row + 1):
+            if unpaid_sheet.cell(row=row, column=9).value == data_id:  # Asumsi ID disimpan di kolom 9
+                row_to_delete = row
+                break
+        
+        if row_to_delete:
+            unpaid_sheet.delete_rows(row_to_delete, 1)  # Hapus baris lama
+        else:
+            flash("Data tidak ditemukan.")
+            return redirect('/report')
+
+        # Tambahkan data baru
+        # Cari baris terakhir yang digunakan
+        last_row = unpaid_sheet.max_row
+
+        # Tambahkan nama user sebagai header
+        current_user = session['username']
+        header_row = last_row + 2
+        unpaid_sheet.cell(row=header_row, column=1, value=f"Diupdate oleh: {current_user}")
+        unpaid_sheet.merge_cells(start_row=header_row, start_column=1, end_row=header_row, end_column=8)
+
+        # Tambahkan data cicilan di bawah header
+        for month in range(1, duration + 1):
+            unpaid_sheet.append([
+                contract_no, date, bdm_name, month, monthly_payment, vendor_name, phone, "Belum Dibayar"
+            ])
+
+        # Tambahkan spasi kosong (baris kosong) setelah data
+        unpaid_sheet.append(["" for _ in range(8)])
+        unpaid_sheet.append(["" for _ in range(8)])
+
+        # Simpan workbook
+        update_summary_sheet(workbook)
+        workbook.save(FILE_NAME)
+
+        flash("Data berhasil diupdate!")
+
+    except Exception as e:
+        flash(f"Terjadi kesalahan: {str(e)}")
+
+    return redirect('/report')
 
 
 @app.route('/chat', methods=['GET', 'POST'])
@@ -522,6 +710,66 @@ def view_users():
     conn.close()
 
     return render_template("view_users.html", users=users)
+
+@app.route('/update_user/<int:user_id>', methods=['GET', 'POST'])
+def update_user(user_id):
+    if 'username' not in session or session.get('role') != 'admin':
+        flash("Anda tidak memiliki akses untuk tindakan ini.")
+        return redirect('/')
+
+    conn = sqlite3.connect("billing_system.db")
+    cursor = conn.cursor()
+
+    if request.method == 'POST':
+        username = request.form['username']
+        email = request.form['email']
+        role = request.form['role']
+        password = request.form.get('password')  # Bisa kosong jika tidak diisi
+
+    if password:  # Jika password baru diisi, hash password tersebut
+        hashed_password = generate_password_hash(password)
+        cursor.execute("""
+            UPDATE users 
+            SET username = ?, email = ?, role = ?, password = ?
+            WHERE id = ?
+        """, (username, email, role, hashed_password, user_id))
+    else:  # Jika password tidak diisi, update tanpa mengganti password
+        cursor.execute("""
+            UPDATE users 
+            SET username = ?, email = ?, role = ?
+            WHERE id = ?
+        """, (username, email, role, user_id))
+
+        
+        conn.commit()
+        conn.close()
+
+        flash("Data pengguna berhasil diperbarui.")
+        return redirect('/view_users')
+
+    # Jika metode GET, ambil data user untuk diisi di form
+    cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+    user = cursor.fetchone()
+    conn.close()
+
+    return render_template("update_user.html", user=user)
+
+
+@app.route('/delete_user/<int:user_id>', methods=['POST'])
+def delete_user(user_id):
+    if 'username' not in session or session.get('role') != 'admin':
+        flash("Anda tidak memiliki akses untuk tindakan ini.")
+        return redirect('/')
+
+    conn = sqlite3.connect("billing_system.db")
+    cursor = conn.cursor()
+
+    cursor.execute("DELETE FROM users WHERE id = ?", (user_id,))
+    conn.commit()
+    conn.close()
+
+    flash("Pengguna berhasil dihapus.")
+    return redirect('/view_users')
 
 
 if __name__ == "__main__":

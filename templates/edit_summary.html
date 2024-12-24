@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Data</title>
+    <style>
+        /* Umum */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f7f8fa;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        h3 {
+            color: #333;
+            font-size: 1.5em;
+            margin-bottom: 1em;
+        }
+
+        /* Kontainer tabel */
+        .table-container {
+            margin: 20px 0;
+            overflow-x: auto;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: center;
+            border: 1px solid #ddd;
+            color: #555;
+        }
+
+        th {
+            background-color: #007bff;
+            color: #fff;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        /* Tombol */
+        .btn {
+            padding: 8px 16px;
+            font-size: 1em;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        .btn-warning {
+            background-color: #ffc107;
+            color: #000;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .btn-warning:hover {
+            background-color: #e0a800;
+        }
+
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+
+        /* Kolom Aksi */
+        .summary-section .table-container {
+            margin-top: 30px;
+        }
+
+        .summary-table th {
+            background-color: #28a745;
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+
+        .summary-table td {
+            padding: 12px 10px;
+        }
+
+        /* Form Tambah/Update Data */
+        .form-container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            font-size: 1em;
+            color: #333;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            font-size: 1em;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+
+        .form-buttons {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .form-buttons button {
+            padding: 12px 30px;
+            font-size: 1em;
+            border-radius: 25px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .form-buttons button[type="submit"] {
+            background-color: #28a745;
+            color: #fff;
+        }
+
+        .form-buttons button[type="reset"] {
+            background-color: #e0e0e0;
+            color: #333;
+        }
+
+        .form-buttons button:hover {
+            opacity: 0.8;
+        }
+
+        .form-buttons button[type="submit"]:hover {
+            background-color: #218838;
+        }
+
+        .form-buttons button[type="reset"]:hover {
+            background-color: #c0c0c0;
+        }
+
+        /* Responsivitas */
+        @media (max-width: 768px) {
+            table, th, td {
+                font-size: 0.9em;
+            }
+
+            .form-container {
+                width: 100%;
+                padding: 20px;
+            }
+
+            .form-buttons button {
+                padding: 10px 25px;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+{% extends "base.html" %}
+{% block content %}
+<div class="form-wrapper">   
+    <div class="form-container">
+        <h2>Edit Data</h2>
+        <form id="editForm" action="/update" method="POST" novalidate>
+            <input type="hidden" name="id" value="{{ data.id }}"> <!-- ID untuk identifikasi data -->
+
+            <div class="form-group">
+                <label for="bdm_name">Nama BDM</label>
+                <input type="text" name="bdm_name" id="bdm_name" value="{{ data.bdm_name }}" required>
+                <div class="error" id="error-bdm_name"></div>
+            </div>
+            <div class="form-group">
+                <label for="nominal">Nominal</label>
+                <input type="number" name="nominal" id="nominal" value="{{ data.nominal }}" required>
+                <div class="error" id="error-nominal"></div>
+            </div>
+            <div class="form-group">
+                <label for="duration">Jangka Waktu (bulan)</label>
+                <input type="number" name="duration" id="duration" value="{{ data.duration }}" required>
+                <div class="error" id="error-duration"></div>
+            </div>
+            <div class="form-group">
+                <label for="vendor_name">Nama Vendor</label>
+                <input type="text" name="vendor_name" id="vendor_name" value="{{ data.vendor_name }}">
+                <div class="error" id="error-vendor_name"></div>
+            </div>
+            <div class="form-group">
+                <label for="pic">PIC</label>
+                <input type="text" name="pic" id="pic" value="{{ data.pic }}">
+                <div class="error" id="error-pic"></div>
+            </div>
+            <div class="form-group">
+                <label for="phone">No HP</label>
+                <input type="text" name="phone" id="phone" value="{{ data.phone }}">
+                <div class="error" id="error-phone"></div>
+            </div>
+            <div class="form-group">
+                <label for="contract_no">No Kontrak</label>
+                <input type="text" name="contract_no" id="contract_no" value="{{ data.contract_no }}" required>
+                <div class="error" id="error-contract_no"></div>
+            </div>
+            <div class="form-group">
+                <label for="date">Tanggal</label>
+                <input type="date" name="date" id="date" value="{{ data.date }}" required>
+                <div class="error" id="error-date"></div>
+            </div>
+            <div class="form-buttons">
+                <button type="reset" class="reset-button">Reset</button>
+                <button type="submit" class="submit-button">Simpan</button>
+                <a href="{{ url_for('report') }}" class="back-button">kembali</a>
+            </div>
+        </form>
+        
+    </div>
+</div>
+
+<script>
+    document.getElementById('editForm').addEventListener('submit', function(event) {
+        let isValid = true;
+
+        // Clear previous error messages
+        document.querySelectorAll('.error').forEach(el => el.textContent = '');
+
+        // Validate Nama BDM
+        const bdmName = document.getElementById('bdm_name');
+        if (!bdmName.value.trim()) {
+            document.getElementById('error-bdm_name').textContent = 'Nama BDM wajib diisi.';
+            isValid = false;
+        }
+
+        // Validate Nominal
+        const nominal = document.getElementById('nominal');
+        if (!nominal.value.trim() || Number(nominal.value) <= 0) {
+            document.getElementById('error-nominal').textContent = 'Nominal harus lebih dari 0.';
+            isValid = false;
+        }
+
+        // Validate Jangka Waktu
+        const duration = document.getElementById('duration');
+        if (!duration.value.trim() || Number(duration.value) <= 0) {
+            document.getElementById('error-duration').textContent = 'Jangka waktu harus lebih dari 0 bulan.';
+            isValid = false;
+        }
+
+        // Validate No Kontrak
+        const contractNo = document.getElementById('contract_no');
+        if (!contractNo.value.trim()) {
+            document.getElementById('error-contract_no').textContent = 'No Kontrak wajib diisi.';
+            isValid = false;
+        }
+
+        // Validate Tanggal
+        const date = document.getElementById('date');
+        if (!date.value.trim()) {
+            document.getElementById('error-date').textContent = 'Tanggal wajib diisi.';
+            isValid = false;
+        }
+
+        // Prevent form submission if invalid
+        if (!isValid) {
+            event.preventDefault();
+        }
+    });
+</script>
+
+{% endblock %}
+</body>
+</html>
