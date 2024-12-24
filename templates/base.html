@@ -67,5 +67,14 @@
     <footer>
         <p>&copy; 2024 Balikpapan</p>
     </footer>
+
+
+    <script>
+        window.addEventListener("beforeunload", function () {
+            // Kirim permintaan ke server untuk menghapus sesi
+            navigator.sendBeacon("/logout");
+        });
+    </script>
+    
 </body>
 </html>

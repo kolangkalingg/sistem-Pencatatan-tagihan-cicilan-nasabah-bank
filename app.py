@@ -3,14 +3,18 @@ import openpyxl
 from flask import Flask, render_template, request, redirect, session, flash, url_for
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
+from datetime import timedelta
 
 
-# Konstanta nama file Excel
+
+# Konstanta ma file Excel
 FILE_NAME = "data_tagihan.xlsx"
 
 # Inisialisasi aplikasi Flask
 app = Flask(__name__)
-app.secret_key = "your_secret_key"
+app.secret_key = 'your_secret_key'  # Ganti dengan kunci rahasia yang aman
+app.config['SESSION_PERMANENT'] = False  # Sesi tidak bersifat permanen
+
 
 def init_sqlite_db():
     conn = sqlite3.connect("billing_system.db")
@@ -77,7 +81,7 @@ def initialize_excel():
         workbook = openpyxl.Workbook()
 
     if "Data Cicilan yang Belum Dibayar" not in workbook.sheetnames:
-        sheet = workbook.create_sheet("Data Cicilan yang Belum Dibayar")
+        sheet = workbook.create_sheet("Data_Cicilan_yang_Belum_Dibayar")
         sheet.append([
             "No Kontrak", "Hari dan Tanggal", "Nama BDM", 
             "Bulan", "Nominal Cicilan", "Vendor", 
@@ -85,7 +89,7 @@ def initialize_excel():
         ])
 
     if "Data Cicilan yang Sudah Dibayar" not in workbook.sheetnames:
-        sheet = workbook.create_sheet("Data Cicilan yang Sudah Dibayar")
+        sheet = workbook.create_sheet("Data_Cicilan_yang_Sudah_Dibayar")
         sheet.append([
             "No Kontrak", "Hari dan Tanggal", "Nama BDM", 
             "Bulan", "Nominal Cicilan", "Vendor", 
@@ -93,7 +97,7 @@ def initialize_excel():
         ])
 
     if "Ringkasan Data" not in workbook.sheetnames:
-        sheet = workbook.create_sheet("Ringkasan Data")
+        sheet = workbook.create_sheet("Ringkasan_Data")
         sheet.append(["No Kontrak", "Nama BDM", "Sisa Tagihan"])  # Header
 
 
@@ -104,8 +108,8 @@ initialize_excel()
 
 
 def update_summary_sheet(workbook):
-    unpaid_sheet = workbook["Data Cicilan yang Belum Dibayar"]
-    summary_sheet = workbook["Ringkasan Data"]
+    unpaid_sheet = workbook["Data_Cicilan_yang_Belum_Dibayar"]
+    summary_sheet = workbook["Ringkasan_Data"]
 
     # Hapus semua data sebelumnya, tetapi simpan header
     summary_sheet.delete_rows(2, summary_sheet.max_row)
@@ -169,6 +173,7 @@ def login():
 
         if user and check_password_hash(user[2], password):
             if user[4] == 1:  # Cek apakah pengguna sudah disetujui
+                session.clear()  # Pastikan sesi lama dihapus
                 session['user_id'] = user[0]
                 session['username'] = user[1]
                 session['role'] = user[3]
@@ -179,6 +184,8 @@ def login():
         else:
             flash("Username atau password salah!")
     return render_template("login.html")
+
+
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -256,7 +263,7 @@ def submit():
 
         # Load workbook dan sheet
         workbook = openpyxl.load_workbook(FILE_NAME)
-        unpaid_sheet = workbook["Data Cicilan yang Belum Dibayar"]
+        unpaid_sheet = workbook["Data_Cicilan_yang_Belum_Dibayar"]
 
         # Ambil nama user
         current_user = session['username']
@@ -302,8 +309,8 @@ def report():
     try:
         # Load workbook dan sheets
         workbook = openpyxl.load_workbook(FILE_NAME)
-        unpaid_sheet = workbook["Data Cicilan yang Belum Dibayar"]
-        paid_sheet = workbook["Data Cicilan yang Sudah Dibayar"]
+        unpaid_sheet = workbook["Data_Cicilan_yang_Belum_Dibayar"]
+        paid_sheet = workbook["Data_Cicilan_yang_Sudah_Dibayar"]
 
         # Proses data cicilan belum dibayar
         unpaid_reports = []
@@ -349,7 +356,7 @@ def report():
 
         # Ringkasan data
         summary_data = []
-        summary_sheet = workbook["Ringkasan Data"]
+        summary_sheet = workbook["Ringkasan_Data"]
         for row in summary_sheet.iter_rows(min_row=2, values_only=True):
             summary_data.append({
                 "contract_no": row[0],
@@ -397,8 +404,8 @@ def mark_paid():
             flash("File sedang digunakan atau tidak bisa diakses. Tutup file Excel terlebih dahulu!", "danger")
             return redirect('/report')
 
-        unpaid_sheet = workbook["Data Cicilan yang Belum Dibayar"]
-        paid_sheet = workbook["Data Cicilan yang Sudah Dibayar"]
+        unpaid_sheet = workbook["Data_Cicilan_yang_Belum_Dibayar"]
+        paid_sheet = workbook["Data_Cicilan_yang_Sudah_Dibayar"]
 
         row_to_delete = None
         data_to_transfer = None
@@ -464,8 +471,11 @@ def chat():
 
 @app.route('/logout')
 def logout():
-    session.pop('username', None)
+    session.clear()  # Hapus semua data sesi
+    flash("Anda telah logout.")
     return redirect('/login')
+
+
 
 @app.route('/admin_requests')
 def admin_requests():
@@ -504,7 +514,7 @@ def approve_user(user_id):
 @app.route('/view_users')
 @admin_required
 def view_users():
-    print("Fungsi view_users dipanggil!")  # Tambahkan ini untuk debugging
+    print("Fungsi view_users dipanggil!")  
     conn = sqlite3.connect("billing_system.db")
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM users")
@@ -516,3 +526,29 @@ def view_users():
 
 if __name__ == "__main__":
     app.run(debug=True, use_reloader=False)
+
+app.permanent_session_lifetime = timedelta(minutes=1)
+
+@app.before_request
+def check_session():
+    if 'username' not in session and request.endpoint != 'login' and request.endpoint not in ['static']:
+        if not getattr(request, 'is_redirecting', False):
+            flash("Sesi Anda telah berakhir.")
+            request.is_redirecting = True
+        return redirect('/login')
+
+
+@app.before_request
+def handle_session():
+    if 'username' in session:
+        session.permanent = False  # Tetapkan sesi sementara
+        session.modified = True    # Perbarui waktu sesi
+    elif request.endpoint not in ('login', 'register', 'static'):
+        flash("Sesi Anda telah berakhir. Silakan login kembali.")
+        return redirect('/login')
+
+app.config.update(
+    SESSION_COOKIE_SECURE=True,    # Gunakan HTTPS untuk cookie
+    SESSION_COOKIE_HTTPONLY=True, # Batasi akses cookie hanya dari HTTP
+    SESSION_COOKIE_SAMESITE='Lax' # Hindari CSRF pada domain yang berbeda
+)
